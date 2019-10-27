@@ -17,7 +17,6 @@ class client{
 
 		
 		// sentence = inFromUser.readLine();
-		// outToServer.writeBytes(sentence + '\n');
 		outToServer.writeBytes("GET /help HTTP/1.0\r\n");
 		outToServer.writeBytes("Host: localhost:6789\r\n");
 		outToServer.writeBytes("\r\n");
