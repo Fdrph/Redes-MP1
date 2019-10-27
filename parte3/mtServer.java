@@ -40,7 +40,7 @@ class mtServer implements Runnable {
 		while (true) {
 			try {
 				Socket currentConnection = welcomeSocket.accept();
-				// currentConnection.setSoTimeout(10*1000); // set time out to 10 seconds
+				currentConnection.setSoTimeout(10*1000); // set time out to 10 seconds
 				Thread thread = new Thread(new mtServer(currentConnection));
 				thread.start();
 			} catch (Exception e) { e.printStackTrace(); }
@@ -100,7 +100,6 @@ class mtServer implements Runnable {
 		String header;
 		do {
 			header = inFromClient.readLine();
-			// String h[] = header.split("\\:");
 		} while (!header.equals(""));
 
 		// Read the URI
