@@ -6,6 +6,20 @@
     "configurations": [
         {
             "type": "java",
+            "name": "CodeLens (Launch) - server",
+            "request": "launch",
+            "mainClass": "server",
+            "projectName": "mp1_a3bb1cbf"
+        },
+        {
+            "type": "java",
+            "name": "CodeLens (Launch) - client",
+            "request": "launch",
+            "mainClass": "client",
+            "projectName": "mp1_a3bb1cbf"
+        },
+        {
+            "type": "java",
             "name": "Debug (Launch) - Current File",
             "request": "launch",
             "mainClass": "${file}"
@@ -14,8 +28,10 @@
             "type": "java",
             "name": "Debug (Launch)-mtServer",
             "request": "launch",
-            "cwd" : "${workspaceFolder}",
-            "classPaths": ["G:/_REDES_PROJETO/mp1"],
+            "cwd": "${workspaceFolder}/parte3",
+            "classPaths": [
+                "G:/_REDES_PROJETO/mp1/parte3"
+            ],
             "mainClass": "mtServer"
         }
     ]

@@ -5,8 +5,8 @@ JC = javac
 	$(JC) $(JFLAGS) $*.java
 
 CLASSES = \
-	mtServer.java \
-	client.java \
+	server.java \
+	client.java
 
 default: classes
 

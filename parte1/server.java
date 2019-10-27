@@ -4,9 +4,6 @@ import java.net.*;
 class server{
 	public static void main (String argv[]) throws Exception
 	{
-		String clientSentence;
-		String capitalizedSentence;
-
 		//creates welcome socket (the door to knock) -- only used to accept connections
 		ServerSocket welcomeSocket = new ServerSocket(6789);
 
@@ -18,15 +15,12 @@ class server{
 			BufferedReader inFromClient = new BufferedReader(new InputStreamReader(connectionSocket.getInputStream()));
 			DataOutputStream outToClient = new DataOutputStream(connectionSocket.getOutputStream());
 
-			//the server task -- capitalizing sentence and sending it several times to the client
-			clientSentence = inFromClient.readLine();
-			capitalizedSentence = clientSentence.toUpperCase() + '\n';
-		
-			for (int i = 0; i < 10; i++) {
-				outToClient.writeBytes(capitalizedSentence);
-				//Sleep for 1 second to emulate some complicated processing in the server 
-				Thread.sleep(1000);
-			}
+			//Read Request from client and display it
+			String line;
+			do {
+				line = inFromClient.readLine();
+				System.out.println(line);
+			} while (!line.equals(""));
 			
 			//closing
 			connectionSocket.close();

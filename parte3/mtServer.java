@@ -29,7 +29,7 @@ class mtServer implements Runnable {
 			public void run() {
 				try {
 					System.out.print("\nShutting down ...\n");
-					welcomeSocket.close(); // Close the opened socket
+					welcomeSocket.close();
 				} catch (IOException e) { e.printStackTrace(); }
 			}
 		});
@@ -40,7 +40,7 @@ class mtServer implements Runnable {
 		while (true) {
 			try {
 				Socket currentConnection = welcomeSocket.accept();
-				currentConnection.setSoTimeout(10*1000); // set time out to 10 seconds
+				// currentConnection.setSoTimeout(10*1000); // set time out to 10 seconds
 				Thread thread = new Thread(new mtServer(currentConnection));
 				thread.start();
 			} catch (Exception e) { e.printStackTrace(); }
@@ -59,29 +59,35 @@ class mtServer implements Runnable {
 			System.out.println("CLIENT TIMED OUT!");
 			sendErrorResponse(408);
 		} catch (Exception e) {
-			System.out.println(e);
+			System.out.println("HERE3~!");
+			e.printStackTrace();
+		} finally {
+			closeConnection();
 		}
 	}
 	
-	//  Request-Line   = Method SP Request-URI SP HTTP-Version CRLF
-	// Handle 200 OK inside this method, everything else outside.
+	/** Request-Line   = Method SP Request-URI SP HTTP-Version CRLF
+	/* Reads an incoming request and parses it, checking for correctness.
+	/* @return an integer which is the Status-Code in the RFC2616 6.1.1
+	*/
 	private int processRequest() throws Exception {
 
 		// Read the Request-Line
 		String reqLine = inFromClient.readLine();
-		String fields[] = reqLine.split("\\s");
+		if (reqLine == null) {return 200;}
 		
 		// Checking for request correctness
-		if (reqLine == null || reqLine.length() == 0 || Character.isWhitespace(reqLine.charAt(0)) || fields.length != 3) {return 400;}
+		String fields[] = reqLine.split("\\s");
+		if (reqLine.length() == 0 || Character.isWhitespace(reqLine.charAt(0)) || fields.length != 3) {return 400;}
 		if( fields[2].indexOf("HTTP/") != 0 || fields[2].indexOf(".") != 6) {return 400;}
 		String[] temp = fields[2].substring(5).split("\\.");
 		int i,j;
 		try { 
 			i = Integer.parseInt(temp[0]);
 			j = Integer.parseInt(temp[1]);
-		} catch (NumberFormatException e) {return 400;}
+		} catch (NumberFormatException e) {return 400;}	// Version numbers are integers
 		if (i < 0 || j < 0) {return 400;}
-		if (i != 1 || (j != 0 && j != 1) ) {return 505;}
+		if (i != 1 || (j != 0 && j != 1) ) {return 505;} // We only support HTTP 1.0 and 1.1
 		String method = fields[0];
 		if 	(	method.equals("OPTIONS")	|| method.equals("HEAD") 	|| 
 				method.equals("POST") 		|| method.equals("PUT")		|| 
@@ -90,35 +96,28 @@ class mtServer implements Runnable {
 		if (!method.equals("GET")) {return 400;}
 		if (fields[1].indexOf("/") != 0) {return 400;}
 
-		System.out.println(reqLine);
 		// Read the Headers
 		String header;
 		do {
 			header = inFromClient.readLine();
 			// String h[] = header.split("\\:");
-			// System.out.println(header);
 		} while (!header.equals(""));
 
 		// Read the URI
 		String uri = fields[1];
-		System.out.println(uri);
 		String path = System.getProperty("user.dir");
-		System.out.println(path);
 		File requestedResource = new File(path + uri);
-		if(!requestedResource.exists()) {return 404;}
+		if(!requestedResource.exists() || requestedResource.isDirectory()) {return 404;} // Check if requested resource exists on disk
 		byte[] fileContent = Files.readAllBytes(requestedResource.toPath());
 		
 		sendResponse(fileContent);
 
 		//closing
-		currentConnection.close();
-		inFromClient.close();
-		outToClient.close();
-		System.out.println("closed connection");
+		closeConnection();
 		return 200;
 	}
 
-	// Send Body of HTTP response
+	// Send Body of a 200 OK HTTP-response
 	private void sendResponse(byte[] body) {
 		try{
 			outToClient.writeBytes("HTTP/1.1 200 OK\r\n");
@@ -140,10 +139,19 @@ class mtServer implements Runnable {
 		  }
 		try {
 			// Status-Line
-			outToClient.writeBytes("HTTP/1.1");
-			outToClient.writeBytes(" ");
-			outToClient.writeBytes(msg);
+			int size = msg.length()+1;
+			outToClient.writeBytes("HTTP/1.1 "+msg+"\r\n");
+			outToClient.writeBytes("Content-Length: "+ size +"\r\n");
 			outToClient.writeBytes("\r\n");
+			outToClient.writeBytes(msg+"\n");
 		} catch (IOException e) {e.printStackTrace();}
+	}
+
+	private void closeConnection() {
+		try{
+			inFromClient.close();
+			outToClient.close();
+			currentConnection.close();
+		} catch(IOException e) {e.printStackTrace();}
 	}
 }
